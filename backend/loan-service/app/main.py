@@ -1,6 +1,22 @@
-def main():
-    print("Hello from loan-service!")
+from fastapi import FastAPI
+from app.api.v1 import loan_routes
+import pika
+
+app = FastAPI(title="Loan Service")
 
 
-if __name__ == "__main__":
-    main()
+@app.on_event("startup")
+def startup():
+    global rabbitmq_connection, rabbitmq_channel
+    with engine.begin() as conn:
+        conn.run_sync(Base.metadata.create_all)
+    params = pika.URLParameters(RABBITMQ_URL)
+    rabbitmq_connection = pika.BlockingConnection(params)
+    rabbitmq_channel = rabbitmq_connection.channel()
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "UP"}
+
+@app.include_router(loan_routes.router)
