@@ -1,0 +1,54 @@
+services:
+  loan-db:
+    image: postgres
+    container_name: postgres-loan-db
+    environment:
+      POSTGRES_USER: secure-credit
+      POSTGRES_PASSWORD: 12345678
+      POSTGRES_DB: secure_credit_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - loan_db_data:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  loan-service:
+    build: ./loan-service
+    container_name: loan-service
+    environment:
+      POSTGRES_DATABASE_URL: postgresql://secure-credit:12345678@postgres-loan-db:5432/secure_credit_db
+      RABBITMQ_URL:amqp: //guest:guest@rabbitmq:5672/
+    ports:
+      - "8000:8000"
+    depends_on:
+      - loan-db
+      - rabbitmq
+
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    environment:
+      RABBITMQ_URL:amqp: //guest:guest@rabbitmq:5672/
+    ports:
+      - "8001:8000"
+    depends_on:
+      - rabbitmq
+
+  credit-service:
+    build: ./credit-service
+    container_name: credit-service
+    environment:
+      RABBITMQ_URL:amqp: //guest:guest@rabbitmq:5672
+    ports:
+      - "8002:8000"
+    depends_on:
+      - rabbitmq
+
+volumes:
+  loan_db_data:

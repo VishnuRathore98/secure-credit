@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from app.api.v1 import loan_routes
 import pika
 
+from app.core.database import Base
+
 app = FastAPI(title="Loan Service")
 
 
@@ -14,6 +16,7 @@ def startup():
     rabbitmq_connection = pika.BlockingConnection(params)
     rabbitmq_channel = rabbitmq_connection.channel()
 
+Base.metadata.create_all()
 
 @app.get("/health")
 def health_check():
