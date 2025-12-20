@@ -1,6 +1,6 @@
 services:
   loan-db:
-    image: postgres
+    image: postgres:16
     container_name: postgres-loan-db
     environment:
       POSTGRES_USER: secure-credit
@@ -23,7 +23,7 @@ services:
     container_name: loan-service
     environment:
       POSTGRES_DATABASE_URL: postgresql://secure-credit:12345678@postgres-loan-db:5432/secure_credit_db
-      RABBITMQ_URL:amqp: //guest:guest@rabbitmq:5672/
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
     ports:
       - "8000:8000"
     depends_on:
@@ -34,7 +34,7 @@ services:
     build: ./notification-service
     container_name: notification-service
     environment:
-      RABBITMQ_URL:amqp: //guest:guest@rabbitmq:5672/
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
     ports:
       - "8001:8000"
     depends_on:
@@ -44,7 +44,7 @@ services:
     build: ./credit-service
     container_name: credit-service
     environment:
-      RABBITMQ_URL:amqp: //guest:guest@rabbitmq:5672
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     ports:
       - "8002:8000"
     depends_on:

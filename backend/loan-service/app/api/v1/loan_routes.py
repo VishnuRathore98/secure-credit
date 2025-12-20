@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import json
 from uuid import UUID
 from sqlalchemy.future import select
+from app.core.messages import rabbitmq_channel
 
 router = APIRouter()
 
