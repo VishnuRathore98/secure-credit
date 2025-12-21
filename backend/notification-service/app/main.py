@@ -5,7 +5,7 @@ import os
 
 app = FastAPI(title="Notification Service")
 
-RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://guest:guest@rabbitmq:5672/")
+RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
 QUEUE_NAME = "loan.submitted"
 
 
