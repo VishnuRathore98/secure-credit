@@ -4,6 +4,8 @@ import json
 import os
 import random
 import logging
+from contextlib import asynccontextmanager
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -12,14 +14,13 @@ logging.basicConfig(
 
 logger = logging.getLogger("credit-service")
 
-app = FastAPI(title="Credit Service")
 
 RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://guest:guest@rabbitmq:5672/")
 INPUT_QUEUE = "loan.submitted"
 
 
-@app.on_event("startup")
-def startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     params = pika.URLParameters(RABBITMQ_URL)
     connection = pika.BlockingConnection(params)
     channel = connection.channel()
@@ -52,6 +53,9 @@ def startup():
 
     channel.basic_consume(queue=INPUT_QUEUE, on_message_callback=handle_message)
     channel.start_consuming()
+
+
+app = FastAPI(title="Credit Service", lifespan=lifespan)
 
 
 @app.get("/health")
