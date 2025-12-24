@@ -14,17 +14,9 @@ params = pika.URLParameters(settings.RABBITMQ_URL)
 rabbitmq_connection = pika.BlockingConnection(params)
 rabbitmq_channel = rabbitmq_connection.channel()
 
-
-# setting up loan decision consumer
-DECISION_QUEUE = "loan.decision"
-
-
 def start_credit_decision_consumer():
-    params = pika.URLParameters(settings.RABBITMQ_URL)
-    connection = pika.BlockingConnection(params)
-    channel = connection.channel()
 
-    channel.queue_declare(queue=DECISION_QUEUE, durable=True)
+    rabbitmq_channel.queue_declare(queue=settings.DECISION_QUEUE, durable=True)
 
     def handle_decision(ch, method, properties, body):
         event = json.loads(body.decode())
@@ -58,10 +50,10 @@ def start_credit_decision_consumer():
 
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
-    channel.basic_consume(
+    rabbitmq_channel.basic_consume(
         queue=DECISION_QUEUE,
         on_message_callback=handle_decision,
     )
 
     decision_logger.info("Started credit decision consumer")
-    channel.start_consuming()
+    rabbitmq_channel.start_consuming()
