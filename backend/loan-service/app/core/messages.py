@@ -4,7 +4,7 @@ from datetime import datetime
 from app.core.config import settings
 import logging
 from app.models.loan_models import Loan
-from sqlalchemy.ext.asyncio import AsyncSessionLocal
+from app.core.database import get_db
 
 
 decision_logger = logging.getLogger("loan-decision-consumer")
@@ -14,8 +14,8 @@ params = pika.URLParameters(settings.RABBITMQ_URL)
 rabbitmq_connection = pika.BlockingConnection(params)
 rabbitmq_channel = rabbitmq_connection.channel()
 
-def start_credit_decision_consumer():
 
+def start_credit_decision_consumer():
     rabbitmq_channel.queue_declare(queue=settings.DECISION_QUEUE, durable=True)
 
     def handle_decision(ch, method, properties, body):
@@ -29,7 +29,7 @@ def start_credit_decision_consumer():
         from sqlalchemy.future import select
 
         async def update_loan():
-            async with AsyncSessionLocal() as session:
+            async with Session() as session:
                 result = await session.execute(select(Loan).where(Loan.id == loan_id))
                 loan = result.scalar_one_or_none()
 
@@ -51,7 +51,7 @@ def start_credit_decision_consumer():
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
     rabbitmq_channel.basic_consume(
-        queue=DECISION_QUEUE,
+        queue=settings.DECISION_QUEUE,
         on_message_callback=handle_decision,
     )
 

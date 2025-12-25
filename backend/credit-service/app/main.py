@@ -9,6 +9,8 @@ async def lifespan(app: FastAPI):
         queue=INPUT_QUEUE, on_message_callback=handle_message
     )
     rabbitmq_channel.start_consuming()
+    yield
+    rabbitmq_channel.stop_consuming()
 
 
 app = FastAPI(title="Credit Service", lifespan=lifespan)

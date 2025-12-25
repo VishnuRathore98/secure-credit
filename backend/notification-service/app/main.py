@@ -1,16 +1,16 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 import pika
 import json
 import os
 
-app = FastAPI(title="Notification Service")
 
 RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
 QUEUE_NAME = "loan.submitted"
 
 
-@app.on_event("startup")
-def startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     params = pika.URLParameters(RABBITMQ_URL)
     connection = pika.BlockingConnection(params)
     channel = connection.channel()
@@ -24,7 +24,18 @@ def startup():
 
     channel.basic_consume(queue=QUEUE_NAME, on_message_callback=handle_message)
 
+    print("rabbitmq: loan:submitted started consuming.")
+
     channel.start_consuming()
+
+    yield
+
+    print("rabbitmq: loan:submitted stoped consuming.")
+
+    channel.stop_consuming()
+
+
+app = FastAPI(title="Notification Service", lifespan=lifespan)
 
 
 @app.get("/health")
